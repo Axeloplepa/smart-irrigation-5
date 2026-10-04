@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Group 5 Irrigation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#eaf6ff; --dim:rgba(234,246,255,.68); --faint:rgba(234,246,255,.45);
+  --glass:rgba(255,255,255,.09); --glass-2:rgba(255,255,255,.14); --edge:rgba(255,255,255,.2);
+  --b1:#5eead4; --b2:#f0abfc; --ok:#4ade80; --bad:#fb7185; --warn:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',system-ui,sans-serif;color:var(--ink);min-height:100vh;line-height:1.5;
+  background:#07121f;overflow-x:hidden}
+.blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.55;z-index:-1}
+.blob.a{width:46vmax;height:46vmax;background:#0ea5a4;top:-14vmax;left:-10vmax}
+.blob.b{width:40vmax;height:40vmax;background:#6d28d9;bottom:-14vmax;right:-8vmax}
+.blob.c{width:26vmax;height:26vmax;background:#2563eb;top:40%;left:45%;opacity:.35}
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%);
+  border:1px solid var(--edge);border-radius:22px;box-shadow:0 8px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.25)}
+header{position:sticky;top:max(8px,env(safe-area-inset-top));z-index:10;margin:8px auto 0;width:calc(100% - 24px);max-width:1200px;
+  display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding:12px 18px}
+.brand h1{font-size:1.1rem;font-weight:800;letter-spacing:-.02em}
+.brand p{font-size:.78rem;color:var(--faint)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--glass);border:1px solid var(--edge);font-size:.82rem;font-weight:700}
+.chip small{color:var(--faint);font-weight:500}
+.dot{width:9px;height:9px;border-radius:50%;background:#64748b;flex:none}
+.dot.on{background:var(--ok);box-shadow:0 0 10px var(--ok)}
+.dot.bad{background:var(--bad);box-shadow:0 0 10px var(--bad)}
+.dot.warn{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+.seg{display:flex;padding:3px;border-radius:999px;background:rgba(0,0,0,.25);border:1px solid var(--edge)}
+.seg button{border:0;background:none;color:var(--dim);font:inherit;font-size:.82rem;font-weight:700;padding:5px 14px;border-radius:999px;cursor:pointer}
+.seg button.active{background:var(--glass-2);color:var(--ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+main{max-width:1200px;margin:0 auto;padding:18px 12px calc(32px + env(safe-area-inset-bottom))}
+h2{font-size:.95rem;font-weight:700;color:var(--dim);margin:6px 4px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.grid{display:grid;gap:14px;margin-bottom:20px}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:860px){.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.g2,.g3{grid-template-columns:1fr}}
+.card{padding:20px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:700;color:var(--dim);font-size:.9rem}
+.big{font-size:3.1rem;font-weight:800;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:7px;margin-top:10px;padding:4px 12px;border-radius:999px;font-size:.82rem;font-weight:700}
+.pill.moist{background:rgba(74,222,128,.16);color:var(--ok)}.pill.dry{background:rgba(251,113,133,.18);color:var(--bad)}
+.meter{position:relative;height:8px;border-radius:99px;background:rgba(0,0,0,.28);margin:16px 0 14px}
+.meter i{position:absolute;inset:0 auto 0 0;border-radius:99px;transition:width .5s}
+.meter b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.7;border-radius:2px}
+.raw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:.78rem;color:var(--faint)}
+.raw strong{display:block;font-size:1.05rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--edge);background:var(--glass-2);color:var(--ink);font:inherit;font-size:.78rem;font-weight:700;padding:5px 12px;border-radius:999px;cursor:pointer}
+.btn:hover{background:rgba(255,255,255,.22)}.btn.active{background:rgba(255,255,255,.28)}
+.legend{display:flex;gap:14px;font-size:.8rem;color:var(--dim);flex-wrap:wrap}
+.legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:var(--c)}
+canvas{width:100%;height:260px;display:block}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--edge)}
+.row:last-of-type{border:0;padding-bottom:0}.row:first-of-type{padding-top:0}
+.row small{display:block;color:var(--faint);font-size:.75rem}
+.sw{position:relative;width:54px;height:30px;flex:none}
+.sw input{opacity:0;width:100%;height:100%;position:absolute;z-index:2;cursor:pointer;margin:0}
+.sw span{position:absolute;inset:0;border-radius:99px;background:rgba(0,0,0,.3);border:1px solid var(--edge);transition:.2s}
+.sw span::before{content:'';position:absolute;width:22px;height:22px;left:3px;top:3px;border-radius:50%;background:#cbd5e1;transition:.2s}
+.sw input:checked+span{background:rgba(94,234,212,.4);border-color:var(--b1)}
+.sw input:checked+span::before{transform:translateX(24px);background:var(--b1);box-shadow:0 0 12px var(--b1)}
+.sw input:disabled{cursor:wait}.sw input:disabled+span{opacity:.5}
+.sw input:focus-visible+span{outline:2px solid var(--ink);outline-offset:2px}
+.state{text-align:center;padding:6px 0}.state .dot{width:16px;height:16px;margin:0 auto 10px}
+.state .big{font-size:2rem}.state small{color:var(--faint)}
+.note{font-size:.75rem;color:var(--faint);margin-top:12px}
+.range{margin-bottom:18px}.range:last-child{margin:0}
+.range div{display:flex;justify-content:space-between;font-size:.85rem;color:var(--dim);margin-bottom:6px}
+.range b{color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:9px;background:rgba(0,0,0,.3);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--ink);border:3px solid #0ea5a4;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--ink);border:3px solid #0ea5a4;cursor:pointer}
+.sim.off{opacity:.4;pointer-events:none}
+#log{max-height:250px;overflow-y:auto;font-size:.82rem}
+.ev{display:flex;gap:12px;padding:7px 0;border-bottom:1px solid var(--edge);color:var(--dim)}
+.ev:last-child{border:0}.ev time{color:var(--faint);min-width:64px;font-variant-numeric:tabular-nums}
+.ev.i{color:var(--b1)}.ev.w{color:var(--warn)}.ev.d{color:var(--bad)}
+.empty{color:var(--faint);text-align:center;padding:24px 0}
+footer{text-align:center;font-size:.75rem;color:var(--faint)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="blob a"></div><div class="blob b"></div><div class="blob c"></div>
+
+<header class="glass">
+  <div class="brand"><h1>Group 5 Irrigation</h1><p>Smart irrigation and fertigation control</p></div>
+  <div class="chips">
+    <div class="chip"><i class="dot" id="dPump"></i><small>Pump</small><span id="sPump">Off</span></div>
+    <div class="chip"><i class="dot" id="dFlow"></i><small>Flow</small><span id="sFlow">0.0 L/min</span></div>
+    <div class="chip"><i class="dot" id="dLink"></i><small>Link</small><span id="sLink">Demo</span></div>
+    <div class="seg" role="group" aria-label="Data source">
+      <button id="mDemo" class="active">Demo</button><button id="mLive">Live</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <h2>Soil moisture <button class="btn" id="resetMM">Reset raw min/max</button></h2>
+  <div class="grid g2">
+    <div class="card glass">
+      <div class="top"><span>Planter bed 1</span><span id="age1" style="font-weight:500;color:var(--faint)"></span></div>
+      <div class="big" id="v1">--%</div><div class="pill moist" id="p1">--</div>
+      <div class="meter"><i id="m1" style="background:var(--b1);width:0"></i><b class="th"></b></div>
+      <div class="raw"><div>Raw now<strong id="r1">--</strong></div><div>Lowest seen<strong id="lo1">--</strong></div><div>Highest seen<strong id="hi1">--</strong></div></div>
+    </div>
+    <div class="card glass">
+      <div class="top"><span>Planter bed 2</span><span id="age2" style="font-weight:500;color:var(--faint)"></span></div>
+      <div class="big" id="v2">--%</div><div class="pill moist" id="p2">--</div>
+      <div class="meter"><i id="m2" style="background:var(--b2);width:0"></i><b class="th"></b></div>
+      <div class="raw"><div>Raw now<strong id="r2">--</strong></div><div>Lowest seen<strong id="lo2">--</strong></div><div>Highest seen<strong id="hi2">--</strong></div></div>
+    </div>
+  </div>
+
+  <h2>Moisture history
+    <span class="seg" id="rng"><button data-n="30">30</button><button data-n="60" class="active">60</button><button data-n="120">120</button></span>
+  </h2>
+  <div class="card glass" style="margin-bottom:20px">
+    <div class="legend" style="margin-bottom:10px">
+      <span style="--c:var(--b1)">Bed 1</span><span style="--c:var(--b2)">Bed 2</span><span style="--c:var(--ink)">Dry threshold</span>
+    </div>
+    <canvas id="chart" aria-label="Moisture history chart"></canvas>
+  </div>
+
+  <h2>Controls</h2>
+  <div class="grid g3">
+    <div class="card glass">
+      <div class="top"><span>Valves</span><span id="ctlState" style="font-weight:500;color:var(--faint)">Ready</span></div>
+      <div class="row"><div>Valve 1<small>Bed 1 line</small></div><label class="sw"><input type="checkbox" id="sv1"><span></span></label></div>
+      <div class="row"><div>Valve 2<small>Bed 2 line</small></div><label class="sw"><input type="checkbox" id="sv2"><span></span></label></div>
+      <p class="note" id="ctlNote"></p>
+    </div>
+    <div class="card glass"><div class="top"><span>Water pump</span></div>
+      <div class="state"><i class="dot" id="iPump"></i><div class="big" id="tPump">Off</div><small>Pump state</small></div></div>
+    <div class="card glass"><div class="top"><span>Flow meter</span></div>
+      <div class="state"><i class="dot" id="iFlow"></i><div class="big" id="tFlow">0.0</div><small>Liters per minute</small></div></div>
+  </div>
+
+  <div class="grid g2">
+    <div>
+      <h2>Demo simulator</h2>
+      <div class="card glass sim" id="sim">
+        <div class="range"><div><label for="s1">Bed 1 moisture</label><span><b id="s1v">65</b>%</span></div><input type="range" id="s1" min="0" max="100" value="65"></div>
+        <div class="range"><div><label for="s2">Bed 2 moisture</label><span><b id="s2v">28</b>%</span></div><input type="range" id="s2" min="0" max="100" value="28"></div>
+        <p class="note">Only active in Demo mode. Valves and pump are simulated too.</p>
+      </div>
+    </div>
+    <div>
+      <h2>Event log</h2>
+      <div class="card glass"><div id="log"><div class="empty">No events yet</div></div></div>
+    </div>
+  </div>
+  <footer>Group 5 System &bull; ThingSpeak integrated</footer>
+</main>
+
+<script>
+/* ============ CONFIG: edit these ============ */
+const CFG = {
+  // Data channel (sensor node writes here)
+  dataChannel: "3519558",
+  dataReadKey: "ZSPP51V4CIZQBRNP",
+  // field numbers in the data channel
+  F: { moist1:1, moist2:2, raw1:3, raw2:4, flow:5, pump:6 },
+  // Control channel (dashboard writes valve commands, ESP32 reads them).
+  // Use a SEPARATE channel so commands don't create blank rows in your sensor history.
+  ctlChannel: "",          // e.g. "1234567"
+  ctlReadKey: "",          // leave "" if the channel is public
+  ctlWriteKey: "",         // required for valve control
+  ctlFields: { valve1:1, valve2:2 },
+  threshold: 40,           // % below this = dry
+  pollMs: 10000,
+  writeCooldownMs: 15000,  // ThingSpeak free tier: 1 write / 15 s
+  demoRaw: { dry: 620, wet: 300 } // Nano 10-bit capacitive probe range, used only in demo
+};
+/* ============================================ */
+
+const $ = id => document.getElementById(id);
+const clamp = (n,a,b) => Math.min(b, Math.max(a, n));
+let demo = true, hist = [], rangeN = 60, pollTimer = null, demoTimer = null, lockTimer = null;
+let dry = [null,null], mm = [{lo:null,hi:null},{lo:null,hi:null}], lastKey = "";
+
+/* ---------- log ---------- */
+function log(msg, t = "") {
+  const box = $("log"), e = box.querySelector(".empty"); if (e) e.remove();
+  const d = document.createElement("div"); d.className = "ev " + t;
+  const time = new Date().toLocaleTimeString("en-GB");
+  d.innerHTML = `<time>${time}</time><span>${msg}</span>`;
+  box.prepend(d); while (box.children.length > 50) box.lastChild.remove();
+}
+
+/* ---------- render readings ---------- */
+function setPill(i, v) {
+  const isDry = v < CFG.threshold, el = $("p" + (i+1));
+  el.className = "pill " + (isDry ? "dry" : "moist");
+  el.innerHTML = `<i class="dot ${isDry ? "bad" : "on"}"></i>${isDry ? "Dry" : "Moist"}`;
+  if (dry[i] !== null && dry[i] !== isDry) log(`Bed ${i+1} is now ${isDry ? "dry" : "moist"} (${v}%)`, isDry ? "d" : "i");
+  dry[i] = isDry;
+}
+function showBed(i, pct, raw) {
+  const n = i + 1;
+  if (pct != null) { $("v"+n).textContent = pct + "%"; $("m"+n).style.width = clamp(pct,0,100) + "%"; setPill(i, pct); }
+  if (raw != null) {
+    $("r"+n).textContent = raw;
+    const m = mm[i]; m.lo = m.lo == null ? raw : Math.min(m.lo, raw); m.hi = m.hi == null ? raw : Math.max(m.hi, raw);
+    $("lo"+n).textContent = m.lo; $("hi"+n).textContent = m.hi;
+  }
+}
+function showPump(on) {
+  ["dPump","iPump"].forEach(x => $(x).classList.toggle("on", on));
+  $("sPump").textContent = $("tPump").textContent = on ? "On" : "Off";
+}
+function showFlow(f) {
+  ["dFlow","iFlow"].forEach(x => $(x).classList.toggle("on", f > 0));
+  $("sFlow").textContent = f.toFixed(1) + " L/min"; $("tFlow").textContent = f.toFixed(1);
+}
+document.querySelectorAll(".th").forEach(t => t.style.left = CFG.threshold + "%");
+
+/* ---------- chart ---------- */
+function drawChart() {
+  const c = $("chart"), r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  c.width = r.width * dpr; c.height = r.height * dpr;
+  const g = c.getContext("2d"); g.scale(dpr, dpr);
+  const W = r.width, H = r.height, L = 34, R = 8, T = 8, B = 22, pw = W-L-R, ph = H-T-B;
+  const data = hist.slice(-rangeN), y = v => T + ph * (1 - v/100);
+  g.font = "11px Manrope, sans-serif"; g.textBaseline = "middle";
+  [0,25,50,75,100].forEach(v => {
+    g.strokeStyle = "rgba(255,255,255,.1)"; g.beginPath(); g.moveTo(L,y(v)); g.lineTo(W-R,y(v)); g.stroke();
+    g.fillStyle = "rgba(234,246,255,.5)"; g.textAlign = "right"; g.fillText(v, L-6, y(v));
+  });
+  g.setLineDash([5,5]); g.strokeStyle = "rgba(234,246,255,.6)"; g.beginPath();
+  g.moveTo(L,y(CFG.threshold)); g.lineTo(W-R,y(CFG.threshold)); g.stroke(); g.setLineDash([]);
+  if (data.length < 2) { g.fillStyle = "rgba(234,246,255,.5)"; g.textAlign = "center"; g.fillText("Waiting for data...", W/2, H/2); return; }
+  const x = i => L + pw * i / (data.length - 1);
+  [["b1","#5eead4"],["b2","#f0abfc"]].forEach(([k,col]) => {
+    g.beginPath(); let pen = false;
+    data.forEach((d,i) => { if (d[k] == null) { pen = false; return; } pen ? g.lineTo(x(i),y(d[k])) : g.moveTo(x(i),y(d[k])); pen = true; });
+    g.strokeStyle = col; g.lineWidth = 2.5; g.lineJoin = "round"; g.shadowColor = col; g.shadowBlur = 8; g.stroke(); g.shadowBlur = 0;
+  });
+  g.fillStyle = "rgba(234,246,255,.5)"; g.textBaseline = "top"; g.textAlign = "left";
+  const tm = d => new Date(d.t).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+  g.fillText(tm(data[0]), L, H-B+6); g.textAlign = "right"; g.fillText(tm(data[data.length-1]), W-R, H-B+6);
+}
+window.addEventListener("resize", drawChart);
+$("rng").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  rangeN = +b.dataset.n; [...$("rng").children].forEach(x => x.classList.toggle("active", x === b));
+  if (!demo) loadLive(true); else drawChart();
+});
+
+/* ---------- demo mode ---------- */
+const rawFor = p => Math.round(CFG.demoRaw.dry - p/100*(CFG.demoRaw.dry - CFG.demoRaw.wet) + (Math.random()*4-2));
+function demoTick(push = true) {
+  const b1 = clamp(Math.round(+$("s1").value + (Math.random()*2-1)),0,100), b2 = clamp(Math.round(+$("s2").value + (Math.random()*2-1)),0,100);
+  showBed(0,b1,rawFor(b1)); showBed(1,b2,rawFor(b2));
+  if (push) { hist.push({t:Date.now(), b1, b2}); if (hist.length > 300) hist.shift(); }
+  drawChart();
+}
+function applyDemoValves() {
+  const a = $("sv1").checked, b = $("sv2").checked;
+  showPump(a || b); showFlow((a?4.5:0) + (b?4.5:0));
+}
+function seedDemo() {
+  hist = []; const s1 = +$("s1").value, s2 = +$("s2").value, now = Date.now();
+  for (let i = 60; i > 0; i--) hist.push({t: now - i*3000, b1: clamp(Math.round(s1 + Math.sin(i/6)*4 + Math.random()*2),0,100), b2: clamp(Math.round(s2 + Math.cos(i/7)*4 + Math.random()*2),0,100)});
+}
+["s1","s2"].forEach(id => $(id).addEventListener("input", () => {
+  $("s1v").textContent = $("s1").value; $("s2v").textContent = $("s2").value; if (demo) demoTick(false);
+}));
+
+/* ---------- live mode: ThingSpeak read ---------- */
+const num = v => (v === null || v === undefined || v === "" || isNaN(Number(v))) ? null : Number(v);
+async function loadLive(fullReload) {
+  const n = fullReload ? Math.max(rangeN, 60) : 1;
+  const url = `https://api.thingspeak.com/channels/${CFG.dataChannel}/feeds.json?api_key=${CFG.dataReadKey}&results=${fullReload ? 200 : 1}`;
+  try {
+    const res = await fetch(url); if (!res.ok) throw new Error("HTTP " + res.status);
+    const js = await res.json(), F = CFG.F, feeds = js.feeds || [];
+    if (fullReload) hist = feeds.map(f => ({t: new Date(f.created_at).getTime(), b1: num(f["field"+F.moist1]), b2: num(f["field"+F.moist2])}));
+    const f = feeds[feeds.length - 1]; if (!f) { log("No data in channel yet", "w"); return; }
+    const b1 = num(f["field"+F.moist1]), b2 = num(f["field"+F.moist2]);
+    showBed(0, b1, num(f["field"+F.raw1])); showBed(1, b2, num(f["field"+F.raw2]));
+    const flow = num(f["field"+F.flow]), pump = num(f["field"+F.pump]);
+    if (flow != null) showFlow(flow);
+    if (pump != null) showPump(pump > 0); else if (flow != null) showPump(flow > 0);
+    const age = Math.round((Date.now() - new Date(f.created_at)) / 1000);
+    ["age1","age2"].forEach(id => $(id).textContent = age < 90 ? `${age}s ago` : `${Math.round(age/60)} min ago`);
+    const stale = age > 120; $("dLink").className = "dot " + (stale ? "warn" : "on"); $("sLink").textContent = stale ? "Stale" : "Live";
+    const key = f.entry_id + ""; 
+    if (!fullReload && key !== lastKey) { hist.push({t: new Date(f.created_at).getTime(), b1, b2}); log(`Live update: Bed 1 ${b1}% | Bed 2 ${b2}%`, "i"); }
+    lastKey = key; drawChart();
+    if (CFG.ctlChannel) syncValves();
+  } catch (e) {
+    $("dLink").className = "dot bad"; $("sLink").textContent = "Offline";
+    log("Could not read ThingSpeak: " + e.message, "d");
+  }
+}
+async function syncValves() {
+  if (lockTimer) return; // don't overwrite a pending command
+  try {
+    const k = CFG.ctlReadKey ? `?api_key=${CFG.ctlReadKey}` : "";
+    const f = await (await fetch(`https://api.thingspeak.com/channels/${CFG.ctlChannel}/feeds/last.json${k}`)).json();
+    $("sv1").checked = num(f["field"+CFG.ctlFields.valve1]) === 1;
+    $("sv2").checked = num(f["field"+CFG.ctlFields.valve2]) === 1;
+  } catch (e) { /* keep current switch state */ }
+}
+
+/* ---------- live mode: valve commands ---------- */
+let prev = [false,false];
+async function onValve(which) {
+  const a = $("sv1").checked, b = $("sv2").checked;
+  if (demo) {
+    [[a,0],[b,1]].forEach(([v,i]) => { if (v !== prev[i]) log(`Valve ${i+1} ${v ? "opened" : "closed"}`, "i"); });
+    prev = [a,b]; applyDemoValves(); return;
+  }
+  if (!CFG.ctlChannel || !CFG.ctlWriteKey) {
+    log("Valve control needs ctlChannel and ctlWriteKey in CFG", "w");
+    $("sv"+which).checked = prev[which-1]; return;
+  }
+  const url = `https://api.thingspeak.com/update?api_key=${CFG.ctlWriteKey}&field${CFG.ctlFields.valve1}=${a?1:0}&field${CFG.ctlFields.valve2}=${b?1:0}`;
+  lockControls(true);
+  try {
+    const id = await (await fetch(url)).text();
+    if (id.trim() === "0") throw new Error("rejected (15 s limit or wrong key)");
+    prev = [a,b]; log(`Command sent: Valve 1 ${a?"open":"closed"}, Valve 2 ${b?"open":"closed"}`, "i");
+  } catch (e) {
+    $("sv"+which).checked = prev[which-1]; log("Valve command failed: " + e.message, "d");
+  }
+  let left = CFG.writeCooldownMs / 1000; $("ctlState").textContent = `Wait ${left}s`;
+  lockTimer = setInterval(() => {
+    left--; $("ctlState").textContent = left > 0 ? `Wait ${left}s` : "Ready";
+    if (left <= 0) { clearInterval(lockTimer); lockTimer = null; lockControls(false); }
+  }, 1000);
+}
+function lockControls(on) { $("sv1").disabled = $("sv2").disabled = on; }
+$("sv1").addEventListener("change", () => onValve(1));
+$("sv2").addEventListener("change", () => onValve(2));
+
+/* ---------- mode switch ---------- */
+function setMode(isDemo) {
+  demo = isDemo; clearInterval(pollTimer); clearInterval(demoTimer);
+  $("mDemo").classList.toggle("active", demo); $("mLive").classList.toggle("active", !demo);
+  $("sim").classList.toggle("off", !demo);
+  dry = [null,null]; mm = [{lo:null,hi:null},{lo:null,hi:null}];
+  if (demo) {
+    $("dLink").className = "dot"; $("sLink").textContent = "Demo";
+    ["age1","age2"].forEach(id => $(id).textContent = "");
+    $("ctlNote").textContent = "Demo: valves are simulated.";
+    seedDemo(); demoTick(false); applyDemoValves(); demoTimer = setInterval(demoTick, 3000);
+    log("Demo mode on", "i");
+  } else {
+    $("ctlNote").textContent = CFG.ctlChannel && CFG.ctlWriteKey ? "Commands go to ThingSpeak; the ESP32 applies them on its next check." : "Add ctlChannel and ctlWriteKey in CFG to enable valve control.";
+    lockControls(false); showPump(false); showFlow(0); log("Live mode: reading ThingSpeak every " + CFG.pollMs/1000 + "s", "w");
+    loadLive(true); pollTimer = setInterval(() => loadLive(false), CFG.pollMs);
+  }
+}
+$("mDemo").onclick = () => demo || setMode(true);
+$("mLive").onclick = () => demo && setMode(false);
+$("resetMM").onclick = () => { mm = [{lo:null,hi:null},{lo:null,hi:null}]; ["lo1","hi1","lo2","hi2"].forEach(i => $(i).textContent = "--"); log("Raw min/max reset", "i"); };
+
+log("Dashboard ready", "i"); setMode(true);
+</script>
+</body>
+</html>
